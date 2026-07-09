@@ -2,95 +2,454 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Daily Meal" />
   <meta name="theme-color" content="#1B3B2F" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <title>Daily Meal</title>
   <style>
-    body { margin:0; font-family: -apple-system, sans-serif; background:#F5F0E6; color:#242220; }
-    header { background:#1B3B2F; color:#F5F0E6; padding:24px; }
-    main { max-width:480px; margin:0 auto; padding:20px; }
-    input[type="number"], select, button { font-size:16px; padding:10px; border-radius:6px; border:1px solid #D8CFBC; }
-    button { background:#1B3B2F; color:#fff; border:none; cursor:pointer; margin-top:14px; }
-    button:disabled { background:#A9967A; cursor:default; }
-    .card { background:#fff; border:1px solid #E9E2D4; border-radius:8px; padding:16px; margin-bottom:12px; }
-    .hidden { display:none; }
-    #error { color:#8A3B3B; margin-top:10px; }
-    .ingredients { margin-top:10px; padding-left:0; list-style:none; font-size:14px; }
-    .ingredients li { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #E9E2D4; }
-    .ingredients li span:last-child { color:#8C6D3F; font-family:monospace; }
-    .checkbox-group { display:flex; flex-wrap:wrap; gap:8px; }
-    .checkbox-group label {
-      display:flex; align-items:center; gap:5px;
-      background:#FFFCF7; border:1px solid #E9E2D4; border-radius:20px;
-      padding:6px 12px; font-size:13px; cursor:pointer;
+    :root {
+      --color-bg: #F6EFE4;
+      --color-surface: #FFFDF8;
+      --color-ink: #23201B;
+      --color-muted: #6B6355;
+      --color-forest: #1B3B2F;
+      --color-forest-dark: #12291F;
+      --color-ochre: #B8935A;
+      --color-ochre-deep: #8C6D3F;
+      --color-ochre-light: #D9BE8F;
+      --color-line: #E7DCC8;
+      --color-error: #A23B3B;
+      --color-error-bg: #F7E9E5;
+
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-body: 'Work Sans', -apple-system, sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 24px;
+      --space-6: 32px;
+
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
-    .checkbox-group input { margin:0; }
-    .field-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      background: var(--color-bg);
+      color: var(--color-ink);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: none;
+    }
+
+    body {
+      padding-bottom: calc(84px + var(--safe-bottom));
+    }
+
+    /* ---------- Header ---------- */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      background: var(--color-forest);
+      color: var(--color-bg);
+      padding: calc(var(--space-3) + var(--safe-top)) var(--space-4) var(--space-3);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.08);
+    }
+
+    .app-header .mark { flex-shrink: 0; }
+
+    .app-header h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .app-header p {
+      margin: 1px 0 0;
+      font-size: 12px;
+      color: #C9C0A9;
+    }
+
+    /* ---------- Main layout ---------- */
+    main {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: var(--space-4);
+    }
+
+    .panel {
+      background: var(--color-surface);
+      border: 1px solid var(--color-line);
+      border-radius: 14px;
+      padding: var(--space-4);
+      margin-bottom: var(--space-3);
+    }
+
+    .panel-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-ochre-deep);
+      margin: 0 0 var(--space-3);
+    }
+
+    /* ---------- Objectif / repas row ---------- */
+    .field-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+    }
+    .field-row + .field-row { margin-top: var(--space-3); }
+
+    .field-row label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-ink);
+    }
+
+    input[type="number"], select {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--color-line);
+      background: var(--color-bg);
+      color: var(--color-ink);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="number"] { width: 84px; text-align: right; }
+
+    select {
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0L5 6L10 0Z' fill='%236B6355'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 30px;
+    }
+
+    /* ---------- Accordion (garde-manger) ---------- */
+    .accordion-item + .accordion-item {
+      border-top: 1px solid var(--color-line);
+    }
+
+    .accordion-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: none;
+      border: none;
+      padding: var(--space-3) 0;
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-ink);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .accordion-trigger .count {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--color-muted);
+      font-weight: 400;
+      margin-left: auto;
+      margin-right: var(--space-3);
+    }
+
+    .accordion-trigger .chevron {
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+    .accordion-item.open .chevron { transform: rotate(180deg); }
+
+    .accordion-panel {
+      display: none;
+      padding-bottom: var(--space-3);
+    }
+    .accordion-item.open .accordion-panel { display: block; }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-line);
+      border-radius: 20px;
+      padding: 7px 13px;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .checkbox-group label:has(input:checked) {
+      background: var(--color-forest);
+      border-color: var(--color-forest);
+      color: var(--color-bg);
+    }
+
+    .checkbox-group input {
+      accent-color: var(--color-ochre-deep);
+      margin: 0;
+    }
+
+    /* ---------- Sticky bottom CTA ---------- */
+    .cta-bar {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 20;
+      padding: var(--space-3) var(--space-4) calc(var(--space-3) + var(--safe-bottom));
+      background: linear-gradient(to top, var(--color-bg) 60%, rgba(246,239,228,0));
+    }
+
+    .cta-bar-inner { max-width: 520px; margin: 0 auto; }
+
+    #generateBtn {
+      width: 100%;
+      background: var(--color-forest);
+      color: var(--color-bg);
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(27,59,47,0.28);
+    }
+    #generateBtn:active { background: var(--color-forest-dark); }
+    #generateBtn:disabled {
+      background: #B7AC94;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    #error {
+      color: var(--color-error);
+      background: var(--color-error-bg);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-top: var(--space-3);
+    }
+    #error:empty { display: none; }
+
+    /* ---------- Meal cards ---------- */
+    #menuContainer { margin-top: var(--space-4); }
+
+    .empty-state {
+      text-align: center;
+      color: var(--color-muted);
+      font-size: 14px;
+      padding: var(--space-6) var(--space-4);
+      border: 1px dashed var(--color-line);
+      border-radius: 14px;
+    }
+
+    .meal-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-line);
+      border-radius: 14px;
+      padding: var(--space-4);
+      margin-bottom: var(--space-3);
+      display: flex;
+      gap: var(--space-4);
+    }
+
+    .meal-card .ring { flex-shrink: 0; margin-top: 2px; }
+
+    .meal-card .meal-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-ochre-deep);
+      margin: 0 0 4px;
+    }
+
+    .meal-card h3 {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 600;
+      margin: 0 0 6px;
+      line-height: 1.25;
+    }
+
+    .meal-card .desc {
+      font-size: 14px;
+      color: var(--color-muted);
+      line-height: 1.5;
+      margin: 0 0 var(--space-3);
+    }
+
+    .macro-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      margin-bottom: var(--space-3);
+    }
+
+    .macro-chips span {
+      padding: 3px 9px;
+      border-radius: 5px;
+      background: var(--color-bg);
+    }
+
+    .ingredients {
+      list-style: none;
+      margin: 0;
+      padding: var(--space-2) 0 0;
+      border-top: 1px solid var(--color-line);
+      font-size: 13.5px;
+    }
+
+    .ingredients li {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      color: var(--color-ink);
+    }
+
+    .ingredients li span:last-child {
+      font-family: var(--font-mono);
+      color: var(--color-ochre-deep);
+      flex-shrink: 0;
+      margin-left: var(--space-3);
+    }
   </style>
 </head>
 <body>
-  <header><h1 style="margin:0; font-size:22px;">Daily Meal</h1></header>
-  <main>
-    <div id="controls">
-      <div class="field-row">
-        <label>Objectif (kcal/jour) :</label>
-        <input type="number" id="targetInput" value="1800" style="width:90px;" />
-      </div>
+  <header class="app-header">
+    <svg class="mark" width="30" height="30" viewBox="0 0 30 30">
+      <circle cx="15" cy="15" r="11" fill="none" stroke="#3F5B4F" stroke-width="5"/>
+      <circle cx="15" cy="15" r="11" fill="none" stroke="#D9BE8F" stroke-width="5"
+        stroke-dasharray="23 46" transform="rotate(-90 15 15)"/>
+    </svg>
+    <div>
+      <h1>Daily Meal</h1>
+      <p>Ton menu du jour, adapté à ton frigo</p>
+    </div>
+  </header>
 
+  <main>
+    <section class="panel">
+      <p class="panel-label">Objectif</p>
       <div class="field-row">
-        <label>Nombre de repas :</label>
+        <label for="targetInput">Calories / jour</label>
+        <input type="number" id="targetInput" value="1800" />
+      </div>
+      <div class="field-row">
+        <label for="mealCountInput">Nombre de repas</label>
         <select id="mealCountInput">
-          <option value="2">2 (déjeuner + dîner)</option>
-          <option value="3" selected>3 (+ petit-déj)</option>
-          <option value="4">4 (+ collation)</option>
-          <option value="5">5 (+ 2 collations)</option>
+          <option value="2">2 — déj + dîner</option>
+          <option value="3" selected>3 — + petit-déj</option>
+          <option value="4">4 — + collation</option>
+          <option value="5">5 — + 2 collations</option>
         </select>
       </div>
+    </section>
 
-      <div id="pantryFilters" style="margin:16px 0;">
-        <p style="font-weight:600; margin-bottom:6px;">Protéines dispo à la maison :</p>
-        <div class="checkbox-group" data-category="proteines">
-          <label><input type="checkbox" value="poulet" checked> Poulet</label>
-          <label><input type="checkbox" value="œufs" checked> Œufs</label>
-          <label><input type="checkbox" value="thon/poisson" checked> Thon / poisson</label>
-          <label><input type="checkbox" value="tofu"> Tofu</label>
-          <label><input type="checkbox" value="bœuf haché"> Bœuf haché</label>
-          <label><input type="checkbox" value="jambon/charcuterie"> Jambon / charcuterie</label>
-          <label><input type="checkbox" value="légumineuses (lentilles, pois chiches)"> Légumineuses</label>
-          <label><input type="checkbox" value="fromage blanc/skyr" checked> Fromage blanc / skyr</label>
-        </div>
+    <section class="panel" id="pantryFilters">
+      <p class="panel-label">Garde-manger</p>
 
-        <p style="font-weight:600; margin:10px 0 6px;">Glucides dispo :</p>
-        <div class="checkbox-group" data-category="glucides">
-          <label><input type="checkbox" value="riz" checked> Riz</label>
-          <label><input type="checkbox" value="pâtes" checked> Pâtes</label>
-          <label><input type="checkbox" value="pain complet" checked> Pain complet</label>
-          <label><input type="checkbox" value="pommes de terre"> Pommes de terre</label>
-          <label><input type="checkbox" value="quinoa"> Quinoa</label>
-          <label><input type="checkbox" value="flocons d'avoine" checked> Flocons d'avoine</label>
-          <label><input type="checkbox" value="patate douce"> Patate douce</label>
-        </div>
-
-        <p style="font-weight:600; margin:10px 0 6px;">Lipides dispo :</p>
-        <div class="checkbox-group" data-category="lipides">
-          <label><input type="checkbox" value="huile d'olive" checked> Huile d'olive</label>
-          <label><input type="checkbox" value="avocat"> Avocat</label>
-          <label><input type="checkbox" value="oléagineux (amandes, noix)"> Oléagineux</label>
-          <label><input type="checkbox" value="beurre"> Beurre</label>
-          <label><input type="checkbox" value="beurre de cacahuète"> Beurre de cacahuète</label>
+      <div class="accordion-item open" data-category="proteines">
+        <button class="accordion-trigger">
+          <span>Protéines</span>
+          <span class="count"></span>
+          <svg class="chevron" width="12" height="8" viewBox="0 0 12 8"><path d="M1 1L6 6L11 1" stroke="#6B6355" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </button>
+        <div class="accordion-panel">
+          <div class="checkbox-group" data-category="proteines">
+            <label><input type="checkbox" value="poulet" checked> Poulet</label>
+            <label><input type="checkbox" value="œufs" checked> Œufs</label>
+            <label><input type="checkbox" value="thon/poisson" checked> Thon / poisson</label>
+            <label><input type="checkbox" value="tofu"> Tofu</label>
+            <label><input type="checkbox" value="bœuf haché"> Bœuf haché</label>
+            <label><input type="checkbox" value="jambon/charcuterie"> Jambon / charcuterie</label>
+            <label><input type="checkbox" value="légumineuses (lentilles, pois chiches)"> Légumineuses</label>
+            <label><input type="checkbox" value="fromage blanc/skyr" checked> Fromage blanc / skyr</label>
+          </div>
         </div>
       </div>
 
-      <button id="generateBtn">Générer le menu du jour</button>
-      <div id="error"></div>
-      <div id="menuContainer"></div>
+      <div class="accordion-item" data-category="glucides">
+        <button class="accordion-trigger">
+          <span>Glucides</span>
+          <span class="count"></span>
+          <svg class="chevron" width="12" height="8" viewBox="0 0 12 8"><path d="M1 1L6 6L11 1" stroke="#6B6355" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </button>
+        <div class="accordion-panel">
+          <div class="checkbox-group" data-category="glucides">
+            <label><input type="checkbox" value="riz" checked> Riz</label>
+            <label><input type="checkbox" value="pâtes" checked> Pâtes</label>
+            <label><input type="checkbox" value="pain complet" checked> Pain complet</label>
+            <label><input type="checkbox" value="pommes de terre"> Pommes de terre</label>
+            <label><input type="checkbox" value="quinoa"> Quinoa</label>
+            <label><input type="checkbox" value="flocons d'avoine" checked> Flocons d'avoine</label>
+            <label><input type="checkbox" value="patate douce"> Patate douce</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item" data-category="lipides">
+        <button class="accordion-trigger">
+          <span>Lipides</span>
+          <span class="count"></span>
+          <svg class="chevron" width="12" height="8" viewBox="0 0 12 8"><path d="M1 1L6 6L11 1" stroke="#6B6355" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </button>
+        <div class="accordion-panel">
+          <div class="checkbox-group" data-category="lipides">
+            <label><input type="checkbox" value="huile d'olive" checked> Huile d'olive</label>
+            <label><input type="checkbox" value="avocat"> Avocat</label>
+            <label><input type="checkbox" value="oléagineux (amandes, noix)"> Oléagineux</label>
+            <label><input type="checkbox" value="beurre"> Beurre</label>
+            <label><input type="checkbox" value="beurre de cacahuète"> Beurre de cacahuète</label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="error"></div>
+    <div id="menuContainer">
+      <div class="empty-state">Ton menu apparaîtra ici. Ajuste l'objectif et le garde-manger, puis génère.</div>
     </div>
   </main>
+
+  <div class="cta-bar">
+    <div class="cta-bar-inner">
+      <button id="generateBtn">Générer le menu du jour</button>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

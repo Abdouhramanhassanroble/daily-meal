@@ -1,4 +1,3 @@
-const controlsDiv = document.getElementById("controls");
 const targetInput = document.getElementById("targetInput");
 const mealCountInput = document.getElementById("mealCountInput");
 const generateBtn = document.getElementById("generateBtn");
@@ -22,10 +21,26 @@ const LABELS = {
   collation_soir: "Collation (soir)",
 };
 
-// ---- Filtres garde-manger ----
+// ---- Accordéon garde-manger ----
+document.querySelectorAll(".accordion-trigger").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const item = btn.closest(".accordion-item");
+    item.classList.toggle("open");
+  });
+});
+
 function getCheckedIngredients(category) {
   const group = document.querySelector(`.checkbox-group[data-category="${category}"]`);
   return Array.from(group.querySelectorAll("input:checked")).map((cb) => cb.value);
+}
+
+function updateAccordionCounts() {
+  document.querySelectorAll(".accordion-item").forEach((item) => {
+    const category = item.dataset.category;
+    const checked = getCheckedIngredients(category).length;
+    const total = document.querySelectorAll(`.checkbox-group[data-category="${category}"] input`).length;
+    item.querySelector(".count").textContent = `${checked}/${total}`;
+  });
 }
 
 function savePantryState() {
@@ -39,17 +54,45 @@ function savePantryState() {
 
 function restorePantryState() {
   const saved = localStorage.getItem("pantry_state");
-  if (!saved) return;
-  const state = JSON.parse(saved);
-  document.querySelectorAll(".checkbox-group input").forEach((cb) => {
-    const category = cb.closest(".checkbox-group").dataset.category;
-    cb.checked = (state[category] || []).includes(cb.value);
-  });
+  if (saved) {
+    const state = JSON.parse(saved);
+    document.querySelectorAll(".checkbox-group input").forEach((cb) => {
+      const category = cb.closest(".checkbox-group").dataset.category;
+      cb.checked = (state[category] || []).includes(cb.value);
+    });
+  }
+  updateAccordionCounts();
 }
 
 document.querySelectorAll(".checkbox-group input").forEach((cb) => {
-  cb.addEventListener("change", savePantryState);
+  cb.addEventListener("change", () => {
+    savePantryState();
+    updateAccordionCounts();
+  });
 });
+
+// ---- Roue de macros en SVG ----
+function macroRingSVG(protein, carbs, fat, size = 52) {
+  const total = protein + carbs + fat || 1;
+  const r = size / 2 - 6;
+  const circ = 2 * Math.PI * r;
+  const pLen = (protein / total) * circ;
+  const cLen = (carbs / total) * circ;
+  const fLen = (fat / total) * circ;
+  const c = size / 2;
+
+  return `
+    <svg class="ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="#E7DCC8" stroke-width="7" />
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="#8C6D3F" stroke-width="7"
+        stroke-dasharray="${pLen} ${circ - pLen}" transform="rotate(-90 ${c} ${c})" />
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="#B8935A" stroke-width="7"
+        stroke-dasharray="${cLen} ${circ - cLen}" stroke-dashoffset="${-pLen}" transform="rotate(-90 ${c} ${c})" />
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="#D9BE8F" stroke-width="7"
+        stroke-dasharray="${fLen} ${circ - fLen}" stroke-dashoffset="${-(pLen + cLen)}" transform="rotate(-90 ${c} ${c})" />
+    </svg>
+  `;
+}
 
 // ---- Appel à la fonction Netlify (la clé API reste côté serveur) ----
 async function generateMenu(targetKcal, mealCount) {
@@ -110,13 +153,21 @@ function renderMenu(menu, slots) {
       .join("");
 
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = "meal-card";
     card.innerHTML = `
-      <strong>${LABELS[key]}</strong>
-      <h3 style="margin:6px 0;">${meal.nom}</h3>
-      <p style="color:#57534A;">${meal.description}</p>
-      <p style="font-size:13px;">${meal.kcal} kcal · P ${meal.proteines_g}g · G ${meal.glucides_g}g · L ${meal.lipides_g}g</p>
-      <ul class="ingredients">${ingredientsHtml}</ul>
+      ${macroRingSVG(meal.proteines_g, meal.glucides_g, meal.lipides_g)}
+      <div>
+        <p class="meal-label">${LABELS[key]}</p>
+        <h3>${meal.nom}</h3>
+        <p class="desc">${meal.description}</p>
+        <div class="macro-chips">
+          <span>${meal.kcal} kcal</span>
+          <span>P ${meal.proteines_g}g</span>
+          <span>G ${meal.glucides_g}g</span>
+          <span>L ${meal.lipides_g}g</span>
+        </div>
+        <ul class="ingredients">${ingredientsHtml}</ul>
+      </div>
     `;
     menuContainer.appendChild(card);
   });
