@@ -1,4 +1,4 @@
-const CACHE_NAME = "daily-meal-v1";
+const CACHE_NAME = "daily-meal-v2";
 const SHELL_FILES = [
   "./",
   "./index.html",
@@ -28,6 +28,20 @@ self.addEventListener("fetch", (event) => {
 
   // Ne jamais mettre en cache les appels API/fonctions
   if (url.hostname === "api.anthropic.com" || url.pathname.startsWith("/.netlify/functions/")) {
+    return;
+  }
+
+  // Network-first pour le HTML, pour toujours avoir la dernière version de l'UI
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
     return;
   }
 
