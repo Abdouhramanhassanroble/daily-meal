@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Daily Meal" />
+  <meta name="theme-color" content="#1B3B2F" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Daily Meal</title>
+  <style>
+    body { margin:0; font-family: -apple-system, sans-serif; background:#F5F0E6; color:#242220; }
+    header { background:#1B3B2F; color:#F5F0E6; padding:24px; }
+    main { max-width:480px; margin:0 auto; padding:20px; }
+    input[type="number"], select, button { font-size:16px; padding:10px; border-radius:6px; border:1px solid #D8CFBC; }
+    button { background:#1B3B2F; color:#fff; border:none; cursor:pointer; margin-top:14px; }
+    button:disabled { background:#A9967A; cursor:default; }
+    .card { background:#fff; border:1px solid #E9E2D4; border-radius:8px; padding:16px; margin-bottom:12px; }
+    .hidden { display:none; }
+    #error { color:#8A3B3B; margin-top:10px; }
+    .ingredients { margin-top:10px; padding-left:0; list-style:none; font-size:14px; }
+    .ingredients li { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #E9E2D4; }
+    .ingredients li span:last-child { color:#8C6D3F; font-family:monospace; }
+    .checkbox-group { display:flex; flex-wrap:wrap; gap:8px; }
+    .checkbox-group label {
+      display:flex; align-items:center; gap:5px;
+      background:#FFFCF7; border:1px solid #E9E2D4; border-radius:20px;
+      padding:6px 12px; font-size:13px; cursor:pointer;
+    }
+    .checkbox-group input { margin:0; }
+    .field-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  </style>
+</head>
+<body>
+  <header><h1 style="margin:0; font-size:22px;">Daily Meal</h1></header>
+  <main>
+    <div id="controls">
+      <div class="field-row">
+        <label>Objectif (kcal/jour) :</label>
+        <input type="number" id="targetInput" value="1800" style="width:90px;" />
+      </div>
+
+      <div class="field-row">
+        <label>Nombre de repas :</label>
+        <select id="mealCountInput">
+          <option value="2">2 (déjeuner + dîner)</option>
+          <option value="3" selected>3 (+ petit-déj)</option>
+          <option value="4">4 (+ collation)</option>
+          <option value="5">5 (+ 2 collations)</option>
+        </select>
+      </div>
+
+      <div id="pantryFilters" style="margin:16px 0;">
+        <p style="font-weight:600; margin-bottom:6px;">Protéines dispo à la maison :</p>
+        <div class="checkbox-group" data-category="proteines">
+          <label><input type="checkbox" value="poulet" checked> Poulet</label>
+          <label><input type="checkbox" value="œufs" checked> Œufs</label>
+          <label><input type="checkbox" value="thon/poisson" checked> Thon / poisson</label>
+          <label><input type="checkbox" value="tofu"> Tofu</label>
+          <label><input type="checkbox" value="bœuf haché"> Bœuf haché</label>
+          <label><input type="checkbox" value="jambon/charcuterie"> Jambon / charcuterie</label>
+          <label><input type="checkbox" value="légumineuses (lentilles, pois chiches)"> Légumineuses</label>
+          <label><input type="checkbox" value="fromage blanc/skyr" checked> Fromage blanc / skyr</label>
+        </div>
+
+        <p style="font-weight:600; margin:10px 0 6px;">Glucides dispo :</p>
+        <div class="checkbox-group" data-category="glucides">
+          <label><input type="checkbox" value="riz" checked> Riz</label>
+          <label><input type="checkbox" value="pâtes" checked> Pâtes</label>
+          <label><input type="checkbox" value="pain complet" checked> Pain complet</label>
+          <label><input type="checkbox" value="pommes de terre"> Pommes de terre</label>
+          <label><input type="checkbox" value="quinoa"> Quinoa</label>
+          <label><input type="checkbox" value="flocons d'avoine" checked> Flocons d'avoine</label>
+          <label><input type="checkbox" value="patate douce"> Patate douce</label>
+        </div>
+
+        <p style="font-weight:600; margin:10px 0 6px;">Lipides dispo :</p>
+        <div class="checkbox-group" data-category="lipides">
+          <label><input type="checkbox" value="huile d'olive" checked> Huile d'olive</label>
+          <label><input type="checkbox" value="avocat"> Avocat</label>
+          <label><input type="checkbox" value="oléagineux (amandes, noix)"> Oléagineux</label>
+          <label><input type="checkbox" value="beurre"> Beurre</label>
+          <label><input type="checkbox" value="beurre de cacahuète"> Beurre de cacahuète</label>
+        </div>
+      </div>
+
+      <button id="generateBtn">Générer le menu du jour</button>
+      <div id="error"></div>
+      <div id="menuContainer"></div>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
