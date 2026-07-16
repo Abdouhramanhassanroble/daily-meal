@@ -204,5 +204,36 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+// ---- Push notifications ----
+async function subscribeToPush(registration) {
+  if (!("PushManager" in window)) return;
+
+  // Récupère la clé publique depuis votre fonction Netlify
+  const res = await fetch("/.netlify/functions/get-vapid-key");
+  const { publicKey } = await res.json();
+
+  const existing = await registration.pushManager.getSubscription();
+  if (existing) return; // déjà abonné, pas besoin de refaire
+
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(publicKey),
+  });
+
+  // Envoie la subscription à votre serveur pour la stocker
+  await fetch("/.netlify/functions/save-subscription", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(subscription),
+  });
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
 // ---- Init ----
 restorePantryState();
