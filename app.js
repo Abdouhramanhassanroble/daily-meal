@@ -52,6 +52,26 @@ function savePantryState() {
   localStorage.setItem("pantry_state", JSON.stringify(state));
 }
 
+// ---- Activation notifications (déclenchée par tap utilisateur, obligatoire sur iOS) ----
+const enableNotifsBtn = document.getElementById("enableNotifsBtn");
+if (enableNotifsBtn) {
+  enableNotifsBtn.addEventListener("click", async () => {
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+      alert("Les notifications ne sont pas supportées ici.");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      alert("Permission refusée.");
+      return;
+    }
+    const registration = await navigator.serviceWorker.ready;
+    await subscribeToPush(registration);
+    alert("Notifications activées !");
+  });
+}
+
+
 function restorePantryState() {
   const saved = localStorage.getItem("pantry_state");
   if (saved) {
